@@ -6,6 +6,7 @@
 # Packaging
 `
 cd $SOME_DIRECTORY\greatgaming-client
+
 mvn package
 `
 
