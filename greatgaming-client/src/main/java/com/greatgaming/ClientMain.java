@@ -2,6 +2,7 @@ package com.greatgaming;
 
 import java.io.*;
 import java.net.*;
+import java.util.Scanner;
 
 public class ClientMain {
 	private static Integer WELCOME_PORT = 6789;
@@ -15,31 +16,34 @@ public class ClientMain {
 		
 		outToServer.writeBytes("RequestingNewConnection" + System.lineSeparator());
 		persistentPort = inFromServer.readLine();
-		System.out.println("Server wants to establish connection on port " + persistentPort);
 		clientSocket.close();
 		return Integer.valueOf(persistentPort);
 	}
 	
 	public static void main(String argv[]) throws Exception {
+		Scanner scanner = new Scanner(System.in);
+		System.out.print("Hi, who are you?: ");
+		String username = scanner.next();
+
 		int port = getPort();
-		
-		String sentence;
-		String modifiedSentence;
-		
-		while (true) {
-			BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-			Socket clientSocket = new Socket("localhost", port);
-			
-			DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-			
-			BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-			
-			sentence = inFromUser.readLine();
-			
-			outToServer.writeBytes(sentence + System.lineSeparator());
-			modifiedSentence = inFromServer.readLine();
-			System.out.println("FROM SERVER: " + modifiedSentence);
-			clientSocket.close();
+
+		DataHandler consoleWriter = new DataHandler();
+		Syncer syncer = new Syncer(port, consoleWriter);
+
+		Thread syncherThread = new Thread(syncer);
+		syncherThread.start();
+		Thread consoleThread = new Thread(consoleWriter);
+		consoleThread.start();
+
+		while(true) {
+			String input = System.console().readLine();
+			if (input.equals("exit")) {
+				syncer.stop();
+				consoleWriter.stop();
+				return;
+			} else {
+				syncer.sendMessage(username + ": " + input);
+			}
 		}
 	}
 }
