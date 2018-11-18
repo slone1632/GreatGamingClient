@@ -11,10 +11,11 @@ import java.util.Queue;
 public class Syncer implements Runnable{
     public static final String HEARTBEAT_STRING = "HEARTBEAT";
     public static final String DISCONNECT_STRING = "TCENNOCSID";
+    public static final String CUSTOM_SEPARATOR = "ROTAPAPES";
     private Integer port;
     private Queue<String> outputMessages;
     private DataHandler handler;
-    private static final Long HEARTBEAT_TIME_MILLIS = 2000l;
+    private static final Long HEARTBEAT_TIME_MILLIS = 100l;
     private boolean keepRunning = true;
 
     public Syncer(Integer port, DataHandler handler) {
@@ -65,11 +66,11 @@ public class Syncer implements Runnable{
         StringBuilder builder = new StringBuilder();
         while (this.outputMessages.peek() != null) {
             builder.append(this.outputMessages.poll());
-            builder.append(System.lineSeparator());
+            builder.append(Syncer.CUSTOM_SEPARATOR);
         }
 
-        String payload = builder.toString();
-        if (!"".equals(payload)) {
+        String payload = builder.toString() + System.lineSeparator();
+        if (!System.lineSeparator().equals(payload)) {
             outToServer.write(payload.getBytes());
         } else{
             outToServer.write((HEARTBEAT_STRING + System.lineSeparator()).getBytes());
