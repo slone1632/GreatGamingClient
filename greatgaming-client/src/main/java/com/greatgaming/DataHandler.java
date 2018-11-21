@@ -20,11 +20,8 @@ public class DataHandler implements Runnable{
         while (this.keepRunning) {
             while (this.inputMessages.peek() != null) {
                 String message = this.inputMessages.poll();
-                String[] split = message.split(Syncer.CUSTOM_SEPARATOR);
-                for (String msg : split) {
-                    if (!msg.equals(Syncer.HEARTBEAT_STRING)) {
-                        System.out.println(msg);
-                    }
+                if (!message.equals(Syncer.HEARTBEAT_STRING)) {
+                    System.out.println(message);
                 }
             }
             try {

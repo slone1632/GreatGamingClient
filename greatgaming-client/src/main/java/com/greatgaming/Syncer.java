@@ -14,13 +14,17 @@ public class Syncer implements Runnable{
     public static final String CUSTOM_SEPARATOR = "ROTAPAPES";
     private Integer port;
     private Queue<String> outputMessages;
+    private Queue<String> inputMessages;
     private DataHandler handler;
-    private static final Long HEARTBEAT_TIME_MILLIS = 100l;
     private boolean keepRunning = true;
+    private Socket clientSocket;
+    private DataOutputStream outToServer;
+    private BufferedReader inFromServer;
 
     public Syncer(Integer port, DataHandler handler) {
         this.port = port;
         this.outputMessages = new LinkedList<>();
+        this.inputMessages = new LinkedList<>();
         this.handler = handler;
     }
 
@@ -33,47 +37,47 @@ public class Syncer implements Runnable{
         keepRunning = false;
     }
 
+    private void openSocket(int numRetries) {
+        if (numRetries == 0) {
+            throw new RuntimeException("Could not open client socket");
+        }
+        try {
+            this.clientSocket = new Socket("localhost", this.port);
+            this.clientSocket.setKeepAlive(true);
+            this.outToServer = new DataOutputStream(clientSocket.getOutputStream());
+            this.inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        } catch (IOException ex) {
+            openSocket(numRetries - 1);
+        }
+    }
+
     public void run() {
-        Long startTime = System.currentTimeMillis();
+        openSocket(3);
         while (keepRunning || outputMessages.peek() != null) {
             try {
-                Socket clientSocket = new Socket("localhost", this.port);
-                DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-                BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
                 sendMessagesToServer(outToServer);
-                String response = inFromServer.readLine();
-                if (!response.equals(HEARTBEAT_STRING)) {
-                    this.handler.handleData(response);
+
+                while (inFromServer.ready()) {
+                    String response = inFromServer.readLine();
+                    if (!response.equals(HEARTBEAT_STRING)) {
+                        this.handler.handleData(response);
+                    }
                 }
-
-                clientSocket.close();
-
-                Long endTime = System.currentTimeMillis();
-                Long elapsed = endTime - startTime;
-                if (elapsed < HEARTBEAT_TIME_MILLIS) {
-                    Thread.sleep(HEARTBEAT_TIME_MILLIS - elapsed);
-                }
-                startTime = System.currentTimeMillis();
-
-            } catch (IOException | InterruptedException ex) {
+            } catch (IOException ex) {
                 System.out.println("sync failed");
+                openSocket(3);
+                run();
             }
         }
     }
 
     private void sendMessagesToServer(DataOutputStream outToServer) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        while (this.outputMessages.peek() != null) {
-            builder.append(this.outputMessages.poll());
-            builder.append(Syncer.CUSTOM_SEPARATOR);
+        if (this.outputMessages.peek() == null) {
+            return;
         }
-
-        String payload = builder.toString() + System.lineSeparator();
-        if (!System.lineSeparator().equals(payload)) {
-            outToServer.write(payload.getBytes());
-        } else{
-            outToServer.write((HEARTBEAT_STRING + System.lineSeparator()).getBytes());
+        while (this.outputMessages.peek() != null) {
+            outToServer.writeBytes(this.outputMessages.poll() + System.lineSeparator());
+            outToServer.flush();
         }
     }
 }
