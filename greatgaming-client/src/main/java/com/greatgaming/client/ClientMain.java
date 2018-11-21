@@ -1,4 +1,4 @@
-package com.greatgaming;
+package com.greatgaming.client;
 
 import java.io.*;
 import java.net.*;

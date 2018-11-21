@@ -1,4 +1,4 @@
-package com.greatgaming;
+package com.greatgaming.client;
 
 import java.util.LinkedList;
 import java.util.Queue;

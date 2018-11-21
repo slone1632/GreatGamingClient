@@ -1,4 +1,4 @@
-package com.greatgaming;
+package com.greatgaming.client;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
