@@ -63,7 +63,8 @@ public class Syncer implements Runnable{
                         this.handler.handleData(response);
                     }
                 }
-            } catch (IOException ex) {
+                Thread.sleep(10);
+            } catch (IOException | InterruptedException ex) {
                 System.out.println("sync failed");
                 openSocket(3);
                 run();
