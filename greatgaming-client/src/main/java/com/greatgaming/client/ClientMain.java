@@ -13,8 +13,8 @@ import com.greatgaming.comms.serialization.Serializer;
 public class ClientMain {
 	private static Integer WELCOME_PORT = 6789;
 	
-	private static Integer getPort(Serializer serializer, String username) throws Exception {
-		Socket clientSocket = new Socket("localhost", WELCOME_PORT);
+	private static Integer getPort(Serializer serializer, String username, String serverAddress) throws Exception {
+		Socket clientSocket = new Socket(serverAddress, WELCOME_PORT);
 
 		LoginRequest request = new LoginRequest();
 		request.username = username;
@@ -34,13 +34,19 @@ public class ClientMain {
 		Scanner scanner = new Scanner(System.in);
 		System.out.print("Hi, who are you?: ");
 		String username = scanner.next();
+		System.out.print("What's the IP address of the server?: ");
+		String serverAddress = scanner.next();
+		System.out.println(serverAddress);
+		if (serverAddress.equals("")) {
+			serverAddress = "localhost";
+		}
 
 		Serializer serializer = new Serializer();
 
-		int port = getPort(serializer, username);
+		int port = getPort(serializer, username, serverAddress);
 
 		DataHandler consoleWriter = new DataHandler();
-		Syncer syncer = new Syncer(port, consoleWriter, serializer);
+		Syncer syncer = new Syncer(port, consoleWriter, serializer, serverAddress);
 
 		Thread syncherThread = new Thread(syncer);
 		syncherThread.start();

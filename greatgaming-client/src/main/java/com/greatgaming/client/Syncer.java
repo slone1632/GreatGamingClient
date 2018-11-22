@@ -1,9 +1,7 @@
 package com.greatgaming.client;
 
 import com.greatgaming.comms.messages.Chat;
-import com.greatgaming.comms.messages.DisconnectRequest;
 import com.greatgaming.comms.messages.DisconnectResponse;
-import com.greatgaming.comms.messages.HeartbeatAcknowledge;
 import com.greatgaming.comms.serialization.Serializer;
 
 import java.io.BufferedReader;
@@ -15,24 +13,21 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class Syncer implements Runnable{
-    public static final String HEARTBEAT_STRING = "HEARTBEAT";
-    public static final String DISCONNECT_STRING = "TCENNOCSID";
     private Integer port;
     private Queue<String> outputMessages;
-    private Queue<String> inputMessages;
     private DataHandler handler;
     private boolean keepRunning = true;
-    private Socket clientSocket;
     private DataOutputStream outToServer;
     private BufferedReader inFromServer;
     private Serializer serializer;
+    private String serverAddress;
 
-    public Syncer(Integer port, DataHandler handler, Serializer serializer) {
+    public Syncer(Integer port, DataHandler handler, Serializer serializer, String serverAddress) {
         this.port = port;
         this.outputMessages = new LinkedList<>();
-        this.inputMessages = new LinkedList<>();
         this.handler = handler;
         this.serializer = serializer;
+        this.serverAddress= serverAddress;
     }
 
     public <T> void sendMessage(Class<T> clazz, T messageObject) {
@@ -49,8 +44,8 @@ public class Syncer implements Runnable{
             throw new RuntimeException("Could not open client socket");
         }
         try {
-            this.clientSocket = new Socket("localhost", this.port);
-            this.clientSocket.setKeepAlive(true);
+            Socket clientSocket = new Socket(this.serverAddress, this.port);
+            clientSocket.setKeepAlive(true);
             this.outToServer = new DataOutputStream(clientSocket.getOutputStream());
             this.inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         } catch (IOException ex) {
