@@ -1,26 +1,37 @@
 package com.greatgaming.client.networking;
 
-import com.greatgaming.client.engine.GameEngine;
+import com.greatgaming.client.engine.GameBridge;
 import com.greatgaming.comms.messages.DisconnectResponse;
 import com.greatgaming.comms.messages.HeartbeatAcknowledge;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class Syncer implements Runnable{
-
-    private GameEngine handler;
     private boolean keepRunning = true;
+    private Queue<Object> messagesToBridge;
     private MessageSender messageSender;
     private MessageReceiver messageReceiver;
 
-    public Syncer(GameEngine handler, MessageSender sender, MessageReceiver receiver) {
-        this.handler = handler;
+    public Syncer(MessageSender sender, MessageReceiver receiver) {
         this.messageSender = sender;
         this.messageReceiver = receiver;
+        this.messagesToBridge = new LinkedList<>();
     }
 
     public <T> void sendMessage(Class<T> clazz, T messageObject) {
         this.messageSender.addMessage(clazz, messageObject);
+    }
+    public List<Object> getIncomingMessages() {
+        List<Object> messages = new ArrayList<>();
+
+        while (messagesToBridge.peek() != null) {
+            messages.add(messagesToBridge.poll());
+        }
+
+        return messages;
     }
 
     public void stop(){
@@ -40,7 +51,7 @@ public class Syncer implements Runnable{
                     } else if (message instanceof HeartbeatAcknowledge){
                         System.out.println("The server acked our heartbeat");
                     } else {
-                        this.handler.handleData(message);
+                        messagesToBridge.add(message);
                     }
                 }
                 Thread.sleep(10);

@@ -4,8 +4,9 @@ import java.io.*;
 import java.net.*;
 import java.util.Scanner;
 
-import com.greatgaming.client.engine.GameEngine;
+import com.greatgaming.client.engine.GameBridge;
 import com.greatgaming.client.networking.*;
+import com.greatgaming.client.ui.GameUI;
 import com.greatgaming.comms.messages.Chat;
 import com.greatgaming.comms.messages.DisconnectRequest;
 import com.greatgaming.comms.messages.LoginRequest;
@@ -38,37 +39,24 @@ public class ClientMain {
 		String username = scanner.next();
 		System.out.print("What's the IP address of the server?: ");
 		String serverAddress = scanner.next();
-		System.out.println(serverAddress);
-		if (serverAddress.equals("")) {
-			serverAddress = "localhost";
-		}
 
 		Serializer serializer = new Serializer();
 
 		int port = getPort(serializer, username, serverAddress);
 
-		GameEngine gameEngine = new GameEngine();
 		StreamFactory streamFactory = new StreamFactory(serverAddress, port, new SocketFactory());
 		MessageReceiver receiver = new MessageReceiver(streamFactory, serializer);
 		MessageSender sender = new MessageSender(streamFactory, serializer);
-		Syncer syncer = new Syncer(gameEngine, sender, receiver);
+		Syncer syncer = new Syncer(sender, receiver);
 
+		GameUI ui = new GameUI();
+
+		GameBridge bridge = new GameBridge(syncer, ui);
 		Thread syncherThread = new Thread(syncer);
 		syncherThread.start();
-		Thread consoleThread = new Thread(gameEngine);
-		consoleThread.start();
 
-		while(true) {
-			String input = System.console().readLine();
-			if (input.equals("exit")) {
-				syncer.sendMessage(DisconnectRequest.class, new DisconnectRequest());
-				gameEngine.stop();
-				return;
-			} else {
-				Chat chat = new Chat();
-				chat.message = input;
-				syncer.sendMessage(Chat.class, chat);
-			}
-		}
+		Thread bridgeThread = new Thread(bridge);
+		bridgeThread.start();
+		ui.run();
 	}
 }
