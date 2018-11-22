@@ -1,14 +1,16 @@
 package com.greatgaming.client;
 
+import com.greatgaming.comms.messages.Chat;
+
 import java.util.LinkedList;
 import java.util.Queue;
 
 public class DataHandler implements Runnable{
-    private Queue<String> inputMessages = new LinkedList<>();
+    private Queue<Chat> inputMessages = new LinkedList<>();
     private boolean keepRunning = true;
 
-    public void handleData(String data) {
-        this.inputMessages.add(data);
+    public void handleData(Chat message) {
+        this.inputMessages.add(message);
     }
 
     public void stop(){
@@ -19,10 +21,8 @@ public class DataHandler implements Runnable{
     public void run() {
         while (this.keepRunning) {
             while (this.inputMessages.peek() != null) {
-                String message = this.inputMessages.poll();
-                if (!message.equals(Syncer.HEARTBEAT_STRING)) {
-                    System.out.println(message);
-                }
+                Chat message = this.inputMessages.poll();
+                System.out.println(message.message);
             }
             try {
                 Thread.sleep(50);

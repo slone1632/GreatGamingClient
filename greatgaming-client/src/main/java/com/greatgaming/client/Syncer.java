@@ -1,5 +1,11 @@
 package com.greatgaming.client;
 
+import com.greatgaming.comms.messages.Chat;
+import com.greatgaming.comms.messages.DisconnectRequest;
+import com.greatgaming.comms.messages.DisconnectResponse;
+import com.greatgaming.comms.messages.HeartbeatAcknowledge;
+import com.greatgaming.comms.serialization.Serializer;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -11,7 +17,6 @@ import java.util.Queue;
 public class Syncer implements Runnable{
     public static final String HEARTBEAT_STRING = "HEARTBEAT";
     public static final String DISCONNECT_STRING = "TCENNOCSID";
-    public static final String CUSTOM_SEPARATOR = "ROTAPAPES";
     private Integer port;
     private Queue<String> outputMessages;
     private Queue<String> inputMessages;
@@ -20,20 +25,22 @@ public class Syncer implements Runnable{
     private Socket clientSocket;
     private DataOutputStream outToServer;
     private BufferedReader inFromServer;
+    private Serializer serializer;
 
-    public Syncer(Integer port, DataHandler handler) {
+    public Syncer(Integer port, DataHandler handler, Serializer serializer) {
         this.port = port;
         this.outputMessages = new LinkedList<>();
         this.inputMessages = new LinkedList<>();
         this.handler = handler;
+        this.serializer = serializer;
     }
 
-    public void sendMessage(String message) {
-        this.outputMessages.add(message);
+    public <T> void sendMessage(Class<T> clazz, T messageObject) {
+        String payload = this.serializer.serialize(clazz, messageObject);
+        this.outputMessages.add(payload);
     }
 
     public void stop(){
-        sendMessage(Syncer.DISCONNECT_STRING);
         keepRunning = false;
     }
 
@@ -59,8 +66,12 @@ public class Syncer implements Runnable{
 
                 while (inFromServer.ready()) {
                     String response = inFromServer.readLine();
-                    if (!response.equals(HEARTBEAT_STRING)) {
-                        this.handler.handleData(response);
+                    Object message = this.serializer.deserialize(response);
+                    if (message instanceof Chat) {
+                        this.handler.handleData((Chat)message);
+                    } else if (message instanceof DisconnectResponse) {
+                        System.out.println("The server acknowledged our shutdown");
+                        stop();
                     }
                 }
                 Thread.sleep(10);

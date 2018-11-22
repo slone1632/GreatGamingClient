@@ -10,4 +10,4 @@ mvn package
 ```
 
 # Running
-java -cp target/greatgaming-client-1.0.jar com.greatgaming.client.ClientMain
+java -cp target\greatgaming-client-1.0-jar-with-dependencies.jar com.greatgaming.client.ClientMain

@@ -4,20 +4,30 @@ import java.io.*;
 import java.net.*;
 import java.util.Scanner;
 
+import com.greatgaming.comms.messages.Chat;
+import com.greatgaming.comms.messages.DisconnectRequest;
+import com.greatgaming.comms.messages.LoginRequest;
+import com.greatgaming.comms.messages.LoginResponse;
+import com.greatgaming.comms.serialization.Serializer;
+
 public class ClientMain {
 	private static Integer WELCOME_PORT = 6789;
 	
-	private static Integer getPort() throws Exception {
-		String persistentPort;
+	private static Integer getPort(Serializer serializer, String username) throws Exception {
 		Socket clientSocket = new Socket("localhost", WELCOME_PORT);
+
+		LoginRequest request = new LoginRequest();
+		request.username = username;
+		String loginPayload = serializer.serialize(LoginRequest.class, request);
 		
 		DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
 		BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 		
-		outToServer.writeBytes("RequestingNewConnection" + System.lineSeparator());
-		persistentPort = inFromServer.readLine();
+		outToServer.writeBytes(loginPayload + System.lineSeparator());
+		String persistentPort = inFromServer.readLine();
+		LoginResponse response = (LoginResponse)serializer.deserialize(persistentPort);
 		clientSocket.close();
-		return Integer.valueOf(persistentPort);
+		return response.gamePort;
 	}
 	
 	public static void main(String argv[]) throws Exception {
@@ -25,10 +35,12 @@ public class ClientMain {
 		System.out.print("Hi, who are you?: ");
 		String username = scanner.next();
 
-		int port = getPort();
+		Serializer serializer = new Serializer();
+
+		int port = getPort(serializer, username);
 
 		DataHandler consoleWriter = new DataHandler();
-		Syncer syncer = new Syncer(port, consoleWriter);
+		Syncer syncer = new Syncer(port, consoleWriter, serializer);
 
 		Thread syncherThread = new Thread(syncer);
 		syncherThread.start();
@@ -38,11 +50,13 @@ public class ClientMain {
 		while(true) {
 			String input = System.console().readLine();
 			if (input.equals("exit")) {
-				syncer.stop();
+				syncer.sendMessage(DisconnectRequest.class, new DisconnectRequest());
 				consoleWriter.stop();
 				return;
 			} else {
-				syncer.sendMessage(username + ": " + input);
+				Chat chat = new Chat();
+				chat.message = input;
+				syncer.sendMessage(Chat.class, chat);
 			}
 		}
 	}
