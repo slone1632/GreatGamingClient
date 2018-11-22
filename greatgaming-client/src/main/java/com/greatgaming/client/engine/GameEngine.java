@@ -1,15 +1,15 @@
-package com.greatgaming.client;
+package com.greatgaming.client.engine;
 
 import com.greatgaming.comms.messages.Chat;
 
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class DataHandler implements Runnable{
-    private Queue<Chat> inputMessages = new LinkedList<>();
+public class GameEngine implements Runnable{
+    private Queue<Object> inputMessages = new LinkedList<>();
     private boolean keepRunning = true;
 
-    public void handleData(Chat message) {
+    public void handleData(Object message) {
         this.inputMessages.add(message);
     }
 
@@ -21,8 +21,11 @@ public class DataHandler implements Runnable{
     public void run() {
         while (this.keepRunning) {
             while (this.inputMessages.peek() != null) {
-                Chat message = this.inputMessages.poll();
-                System.out.println(message.message);
+
+                Object message = this.inputMessages.poll();
+                if (message instanceof Chat) {
+                    System.out.println(((Chat)message).message);
+                }
             }
             try {
                 Thread.sleep(50);

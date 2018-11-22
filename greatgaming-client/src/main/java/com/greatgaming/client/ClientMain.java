@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.*;
 import java.util.Scanner;
 
+import com.greatgaming.client.engine.GameEngine;
+import com.greatgaming.client.networking.*;
 import com.greatgaming.comms.messages.Chat;
 import com.greatgaming.comms.messages.DisconnectRequest;
 import com.greatgaming.comms.messages.LoginRequest;
@@ -45,19 +47,22 @@ public class ClientMain {
 
 		int port = getPort(serializer, username, serverAddress);
 
-		DataHandler consoleWriter = new DataHandler();
-		Syncer syncer = new Syncer(port, consoleWriter, serializer, serverAddress);
+		GameEngine gameEngine = new GameEngine();
+		StreamFactory streamFactory = new StreamFactory(serverAddress, port, new SocketFactory());
+		MessageReceiver receiver = new MessageReceiver(streamFactory, serializer);
+		MessageSender sender = new MessageSender(streamFactory, serializer);
+		Syncer syncer = new Syncer(gameEngine, sender, receiver);
 
 		Thread syncherThread = new Thread(syncer);
 		syncherThread.start();
-		Thread consoleThread = new Thread(consoleWriter);
+		Thread consoleThread = new Thread(gameEngine);
 		consoleThread.start();
 
 		while(true) {
 			String input = System.console().readLine();
 			if (input.equals("exit")) {
 				syncer.sendMessage(DisconnectRequest.class, new DisconnectRequest());
-				consoleWriter.stop();
+				gameEngine.stop();
 				return;
 			} else {
 				Chat chat = new Chat();
