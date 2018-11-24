@@ -6,9 +6,9 @@ import java.util.Scanner;
 
 import com.greatgaming.client.engine.GameBridge;
 import com.greatgaming.client.networking.*;
+import com.greatgaming.client.ui.ConsoleUI;
 import com.greatgaming.client.ui.GameUI;
-import com.greatgaming.comms.messages.Chat;
-import com.greatgaming.comms.messages.DisconnectRequest;
+import com.greatgaming.client.ui.SwinglUI;
 import com.greatgaming.comms.messages.LoginRequest;
 import com.greatgaming.comms.messages.LoginResponse;
 import com.greatgaming.comms.serialization.Serializer;
@@ -49,7 +49,7 @@ public class ClientMain {
 		MessageSender sender = new MessageSender(streamFactory, serializer);
 		Syncer syncer = new Syncer(sender, receiver);
 
-		GameUI ui = new GameUI();
+		GameUI ui = new SwinglUI();
 
 		GameBridge bridge = new GameBridge(syncer, ui);
 		Thread syncherThread = new Thread(syncer);

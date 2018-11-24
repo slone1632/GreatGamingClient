@@ -4,6 +4,7 @@ import com.greatgaming.client.engine.state.ChatState;
 import com.greatgaming.client.engine.state.GameState;
 import com.greatgaming.client.engine.state.RunState;
 import com.greatgaming.client.networking.Syncer;
+import com.greatgaming.client.ui.ConsoleUI;
 import com.greatgaming.client.ui.GameUI;
 import com.greatgaming.comms.messages.Chat;
 import com.greatgaming.comms.messages.DisconnectRequest;
