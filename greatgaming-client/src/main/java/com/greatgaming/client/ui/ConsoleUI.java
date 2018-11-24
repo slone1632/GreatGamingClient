@@ -1,24 +1,22 @@
 package com.greatgaming.client.ui;
 
-import com.greatgaming.client.engine.state.AggregateGameState;
-import com.greatgaming.client.engine.state.ChatState;
-import com.greatgaming.client.engine.state.GameState;
-import com.greatgaming.client.engine.state.RunState;
+import com.greatgaming.client.engine.GameBridge;
+import com.greatgaming.client.engine.state.*;
 
 import java.util.LinkedList;
 import java.util.Queue;
 
 public class ConsoleUI extends GameUI {
     private final Queue<String> consoleQueue = new LinkedList<>();
-    private final AggregateGameState gameState;
+    private Boolean keepAlive = true;
 
-    public ConsoleUI(){
-        this.gameState = new AggregateGameState();
+    public ConsoleUI(AggregateGameState gameState, GameBridge bridge){
+        super(gameState, bridge);
     }
 
     private void render() {
-        ChatState chatState = this.gameState.getState(ChatState.class);
-        for (String message : chatState.getPendingChatLogChanges()) {
+        ChatState chatState = this.aggregateGameState.getState(ChatState.class);
+        for (String message : chatState.getPendingChatLogChanges(ChangeSource.SERVER)) {
             System.out.println(message);
         }
     }
@@ -26,10 +24,10 @@ public class ConsoleUI extends GameUI {
     @Override
     public void run() {
         startConsoleReader();
-        while (isAlive()) {
-            mergeChangesFromServer();
+        while (keepAlive || !aggregateGameState.isInSync()) {
             render();
             sendChangesFromClient();
+            syncWithServer();
             try {
                 Thread.sleep(10);
             } catch (InterruptedException ex) {
@@ -47,23 +45,14 @@ public class ConsoleUI extends GameUI {
         while(consoleQueue.peek() != null) {
             String input = consoleQueue.poll();
             if (input.equals("exit")) {
-                RunState runState = new RunState();
+                RunState runState = this.aggregateGameState.getState(RunState.class);
                 runState.shutDownGame();
-                outgoingGameStateChanges.add(runState);
                 keepAlive = false;
+                System.out.println("Console UI requested shutdown");
             } else {
-                ChatState chatState = new ChatState();
-                chatState.addToChatLog(input);
-                outgoingGameStateChanges.add(chatState);
+                ChatState chatState = this.aggregateGameState.getState(ChatState.class);
+                chatState.addToChatLog(input, ChangeSource.CLIENT);
             }
-        }
-    }
-
-    private void mergeChangesFromServer() {
-        while (this.incomingGameStateChanges.peek() != null) {
-            GameState change = this.incomingGameStateChanges.poll();
-            GameState match = this.gameState.getState(change.getClass());
-            match.merge(change);
         }
     }
 }

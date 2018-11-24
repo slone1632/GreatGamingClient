@@ -46,7 +46,7 @@ public class Syncer implements Runnable{
                 messages = this.messageReceiver.receiveMessages();
                 for (Object message : messages) {
                     if (message instanceof DisconnectResponse) {
-                        System.out.println("The server acknowledged our shutdown");
+                        messagesToBridge.add(message);
                         stop();
                     } else if (message instanceof HeartbeatAcknowledge){
                         System.out.println("The server acked our heartbeat");

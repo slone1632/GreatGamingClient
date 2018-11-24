@@ -5,10 +5,10 @@ import java.net.*;
 import java.util.Scanner;
 
 import com.greatgaming.client.engine.GameBridge;
+import com.greatgaming.client.engine.state.AggregateGameState;
 import com.greatgaming.client.networking.*;
 import com.greatgaming.client.ui.ConsoleUI;
 import com.greatgaming.client.ui.GameUI;
-import com.greatgaming.client.ui.SwinglUI;
 import com.greatgaming.comms.messages.LoginRequest;
 import com.greatgaming.comms.messages.LoginResponse;
 import com.greatgaming.comms.serialization.Serializer;
@@ -49,14 +49,12 @@ public class ClientMain {
 		MessageSender sender = new MessageSender(streamFactory, serializer);
 		Syncer syncer = new Syncer(sender, receiver);
 
-		GameUI ui = new SwinglUI();
 
-		GameBridge bridge = new GameBridge(syncer, ui);
+		GameBridge bridge = new GameBridge(syncer);
 		Thread syncherThread = new Thread(syncer);
 		syncherThread.start();
 
-		Thread bridgeThread = new Thread(bridge);
-		bridgeThread.start();
+		GameUI ui = new ConsoleUI(new AggregateGameState(), bridge);
 		ui.run();
 	}
 }

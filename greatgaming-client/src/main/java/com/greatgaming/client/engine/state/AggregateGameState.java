@@ -14,19 +14,18 @@ public class AggregateGameState {
         return (T)gameStates.getOrDefault(clazz, null);
     }
 
-    public List<GameState> getStatesThatHaveChanged() {
+    public List<GameState> getStatesChangedBy(ChangeSource changeSource) {
         List<GameState> changes = new ArrayList<>();
         for (GameState state : gameStates.values()) {
-            if (!state.isUpToDate()){
+            if (state.hasBeenChangedBy(changeSource)){
                 changes.add(state);
             }
         }
         return changes;
     }
 
-    public void processingComplete() {
-        for (GameState state : gameStates.values()) {
-            state.setUpToDate(true);
-        }
+    public Boolean isInSync() {
+        return getStatesChangedBy(ChangeSource.CLIENT).size() == 0
+                && getStatesChangedBy(ChangeSource.SERVER).size() == 0;
     }
 }
