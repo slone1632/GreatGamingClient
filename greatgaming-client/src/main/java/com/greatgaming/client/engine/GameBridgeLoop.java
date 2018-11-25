@@ -1,16 +1,17 @@
-package com.greatgaming.client.ui;
+package com.greatgaming.client.engine;
 
 import com.greatgaming.client.UIApplication;
-import com.greatgaming.client.engine.GameBridge;
 import com.greatgaming.client.engine.state.AggregateGameState;
-import com.greatgaming.client.engine.state.ChangeSource;
-import com.greatgaming.client.engine.state.GameState;
 
-public class JavaFXUI extends GameUI {
+public class GameBridgeLoop implements Runnable{
     private final UIApplication application;
+    private final AggregateGameState aggregateGameState;
+    private final GameBridge gameBridge;
+    private boolean keepAlive = true;
 
-    public JavaFXUI(AggregateGameState aggregateGameState, GameBridge gameBridge, UIApplication application) {
-        super(aggregateGameState, gameBridge);
+    public GameBridgeLoop(AggregateGameState aggregateGameState, GameBridge gameBridge, UIApplication application) {
+        this.aggregateGameState = aggregateGameState;
+        this.gameBridge = gameBridge;
         this.application = application;
     }
 
@@ -18,7 +19,6 @@ public class JavaFXUI extends GameUI {
         keepAlive = false;
     }
 
-    @Override
     public void run() {
         while (keepAlive || !aggregateGameState.outgoingMessagesAreSynced()) {
             syncWithServer();
@@ -30,5 +30,9 @@ public class JavaFXUI extends GameUI {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void syncWithServer() {
+        this.gameBridge.syncToServer(this.aggregateGameState);
     }
 }

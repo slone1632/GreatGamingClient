@@ -4,7 +4,7 @@ import com.greatgaming.client.engine.GameBridge;
 import com.greatgaming.client.engine.state.AggregateGameState;
 import com.greatgaming.client.engine.state.RunState;
 import com.greatgaming.client.networking.*;
-import com.greatgaming.client.ui.JavaFXUI;
+import com.greatgaming.client.engine.GameBridgeLoop;
 import com.greatgaming.client.ui.scene.GameScene;
 import com.greatgaming.client.ui.scene.LoginScene;
 import com.greatgaming.comms.serialization.Serializer;
@@ -16,7 +16,7 @@ public class UIApplication extends Application {
     private Stage primaryStage;
     private AggregateGameState gameState;
     private GameScene gameScene;
-    private JavaFXUI javaFXUI;
+    private GameBridgeLoop gameBridgeLoop;
 
     public UIApplication() {
         super();
@@ -37,7 +37,7 @@ public class UIApplication extends Application {
         if (this.gameState != null) {
             RunState runState = this.gameState.getState(RunState.class);
             runState.shutDownGame();
-            this.javaFXUI.stop();
+            this.gameBridgeLoop.stop();
         }
     }
 
@@ -67,7 +67,7 @@ public class UIApplication extends Application {
 
         this.gameScene = new GameScene(this.gameState);
         GameBridge gameBridge = new GameBridge(syncer);
-        this.javaFXUI = new JavaFXUI(this.gameState, gameBridge, this);
+        this.gameBridgeLoop = new GameBridgeLoop(this.gameState, gameBridge, this);
 
         this.primaryStage.setScene(gameScene.getScene());
         this.primaryStage.show();
@@ -75,7 +75,7 @@ public class UIApplication extends Application {
         Thread syncherThread = new Thread(syncer);
         syncherThread.start();
 
-        Thread bridgeThread = new Thread(this.javaFXUI);
+        Thread bridgeThread = new Thread(this.gameBridgeLoop);
         bridgeThread.start();
     }
 }
