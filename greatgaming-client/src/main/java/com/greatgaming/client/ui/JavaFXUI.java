@@ -1,24 +1,28 @@
 package com.greatgaming.client.ui;
 
+import com.greatgaming.client.UIApplication;
 import com.greatgaming.client.engine.GameBridge;
 import com.greatgaming.client.engine.state.AggregateGameState;
-import com.greatgaming.client.ui.scene.FXApplication;
-import com.greatgaming.client.ui.scene.GameScene;
+import com.greatgaming.client.engine.state.ChangeSource;
+import com.greatgaming.client.engine.state.GameState;
 
 public class JavaFXUI extends GameUI {
-    public JavaFXUI(AggregateGameState aggregateGameState, GameBridge gameBridge) {
+    private final UIApplication application;
+
+    public JavaFXUI(AggregateGameState aggregateGameState, GameBridge gameBridge, UIApplication application) {
         super(aggregateGameState, gameBridge);
+        this.application = application;
+    }
+
+    public void stop(){
+        keepAlive = false;
     }
 
     @Override
     public void run() {
-        GameScene gameScene = new GameScene(aggregateGameState);
-        FXApplication application = new FXApplication(gameScene.getScene(), aggregateGameState);
-        application.launchApp();
-
-        while (keepAlive || !aggregateGameState.isInSync()) {
+        while (keepAlive || !aggregateGameState.outgoingMessagesAreSynced()) {
             syncWithServer();
-            gameScene.render();
+            application.render();
 
             try {
                 Thread.sleep(10);

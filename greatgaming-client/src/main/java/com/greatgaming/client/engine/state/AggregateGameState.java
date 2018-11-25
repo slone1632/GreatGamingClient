@@ -25,7 +25,9 @@ public class AggregateGameState {
     }
 
     public Boolean isInSync() {
-        return getStatesChangedBy(ChangeSource.CLIENT).size() == 0
-                && getStatesChangedBy(ChangeSource.SERVER).size() == 0;
+        return outgoingMessagesAreSynced() && getStatesChangedBy(ChangeSource.SERVER).size() == 0;
+    }
+    public Boolean outgoingMessagesAreSynced() {
+        return getStatesChangedBy(ChangeSource.CLIENT).size() == 0;
     }
 }
