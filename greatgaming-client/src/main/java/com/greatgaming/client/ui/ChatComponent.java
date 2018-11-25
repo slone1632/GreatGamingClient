@@ -1,28 +1,29 @@
-package com.greatgaming.client.ui.scene;
+package com.greatgaming.client.ui;
 
 import com.greatgaming.client.engine.state.AggregateGameState;
+import com.greatgaming.client.engine.state.ChangeSource;
 import com.greatgaming.client.engine.state.ChatState;
 import com.greatgaming.client.engine.state.GameState;
-import com.greatgaming.client.engine.state.ChangeSource;
 import javafx.event.EventHandler;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
-public class GameScene {
+public class ChatComponent {
     private final AggregateGameState aggregateGameState;
+
     private VBox chat;
 
-    public GameScene(AggregateGameState gameState) {
-
+    public ChatComponent(AggregateGameState gameState) {
         this.aggregateGameState = gameState;
     }
 
     public void render() {
-
         for (GameState changed : this.aggregateGameState.getStatesChangedBy(ChangeSource.SERVER)) {
             if (chat != null) {
                 if (changed instanceof ChatState) {
@@ -39,7 +40,7 @@ public class GameScene {
         }
     }
 
-    public Scene getScene() {
+    public Pane getComponent() {
         BorderPane pane = new BorderPane();
 
         TextField messageText = new TextField();
@@ -65,6 +66,6 @@ public class GameScene {
         pane.setBottom(messageText);
         pane.setCenter(scrollPane);
 
-        return new Scene(pane, 300, 250);
+        return pane;
     }
 }

@@ -1,4 +1,4 @@
-package com.greatgaming.client.ui.scene;
+package com.greatgaming.client.ui;
 
 import com.greatgaming.client.UIApplication;
 import javafx.event.ActionEvent;
