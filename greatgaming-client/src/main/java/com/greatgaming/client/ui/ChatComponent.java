@@ -15,8 +15,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
 public class ChatComponent {
+    public static final Integer TOTAL_HEIGHT = 130;
     private final AggregateGameState aggregateGameState;
-
     private VBox chat;
 
     public ChatComponent(AggregateGameState gameState) {
@@ -50,6 +50,8 @@ public class ChatComponent {
         chat.heightProperty().addListener(observable -> scrollPane.setVvalue(1D));
         scrollPane.setContent(chat);
         scrollPane.setFitToWidth(true);
+        scrollPane.setMaxHeight(100);
+        scrollPane.setMinHeight(100);
 
         messageText.setOnKeyPressed(new EventHandler<KeyEvent>()
         {

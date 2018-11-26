@@ -1,5 +1,9 @@
 package com.greatgaming.client.engine.state;
 
+import com.greatgaming.client.engine.state.player.PlayerKinematicState;
+import com.greatgaming.client.engine.state.player.PlayerState;
+import com.greatgaming.client.engine.state.player.PlayerStatisticsState;
+
 import java.util.*;
 
 public class AggregateGameState {
@@ -8,6 +12,8 @@ public class AggregateGameState {
         this.gameStates = new HashMap<>();
         this.gameStates.put(ChatState.class, new ChatState());
         this.gameStates.put(RunState.class, new RunState());
+        PlayerState playerState = new PlayerState();
+        this.gameStates.put(PlayerState.class, playerState);
     }
 
     public <T extends GameState> T getState(Class<T> clazz) {
