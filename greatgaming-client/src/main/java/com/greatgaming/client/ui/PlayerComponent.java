@@ -1,6 +1,5 @@
 package com.greatgaming.client.ui;
 
-import com.greatgaming.client.engine.state.ChangeSource;
 import com.greatgaming.client.engine.state.player.Coordinate;
 import com.greatgaming.client.engine.state.player.PlayerKinematicState;
 import com.greatgaming.client.engine.state.player.PlayerState;

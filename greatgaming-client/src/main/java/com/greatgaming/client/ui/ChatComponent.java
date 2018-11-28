@@ -28,7 +28,6 @@ public class ChatComponent {
             if (chat != null) {
                 if (changed instanceof ChatState) {
                     ChatState chatState = (ChatState)changed;
-                    System.out.println("Render called");
                     for (String message : chatState.getPendingChatLogChanges(ChangeSource.SERVER)){
                         Label nextLabel = new Label();
                         nextLabel.setText(message);

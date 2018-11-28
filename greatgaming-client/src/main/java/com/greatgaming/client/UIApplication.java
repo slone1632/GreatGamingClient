@@ -1,6 +1,7 @@
 package com.greatgaming.client;
 
 import com.greatgaming.client.engine.GameBridge;
+import com.greatgaming.client.engine.GameBridgeFactory;
 import com.greatgaming.client.engine.state.AggregateGameState;
 import com.greatgaming.client.engine.state.RunState;
 import com.greatgaming.client.networking.*;
@@ -28,12 +29,10 @@ public class UIApplication extends Application {
         primaryStage.setTitle("Login for great gaming");
         primaryStage.setScene(new LoginScene(this).getScene());
         primaryStage.show();
-        System.out.println("Got here");
     }
 
     @Override
     public void stop(){
-        System.out.println("Shut down was called here");
         if (this.gameState != null) {
             RunState runState = this.gameState.getState(RunState.class);
             runState.shutDownGame();
@@ -66,7 +65,7 @@ public class UIApplication extends Application {
         Syncer syncer = new Syncer(sender, receiver);
 
         this.gameScene = new GameScene(this.gameState);
-        GameBridge gameBridge = new GameBridge(syncer);
+        GameBridge gameBridge = new GameBridgeFactory().buildGameBridge(syncer);
         this.gameBridgeLoop = new GameBridgeLoop(this.gameState, gameBridge, this);
 
         this.primaryStage.setScene(gameScene.getScene());

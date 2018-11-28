@@ -1,18 +1,25 @@
 package com.greatgaming.client.engine;
 
 import com.greatgaming.client.engine.state.*;
+import com.greatgaming.client.engine.translator.Translator;
 import com.greatgaming.client.networking.Syncer;
-import com.greatgaming.comms.messages.Chat;
-import com.greatgaming.comms.messages.DisconnectRequest;
-import com.greatgaming.comms.messages.DisconnectResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public class GameBridge {
-    private Syncer networkSyncer;
+    private final Map<Class, Translator> messageToTranslatorMap;
+    private final Map<Class, Translator> stateToTranslatorMap;
+    private final Syncer networkSyncer;
 
-    public GameBridge(Syncer networkSyncer) {
+
+    public GameBridge(
+            Syncer networkSyncer,
+            Map<Class, Translator> messageToTranslatorMap,
+            Map<Class, Translator> stateToTranslatorMap) {
         this.networkSyncer = networkSyncer;
+        this.messageToTranslatorMap = messageToTranslatorMap;
+        this.stateToTranslatorMap =stateToTranslatorMap;
     }
 
     public void syncToServer(AggregateGameState gameState) {
@@ -24,28 +31,19 @@ public class GameBridge {
         List<Object> messages = this.networkSyncer.getIncomingMessages();
 
         for (Object message : messages) {
-            if (message instanceof Chat) {
-                ChatState chatState = gameState.getState(ChatState.class);
-                chatState.addToChatLog(((Chat)message).message, ChangeSource.SERVER);
-            } else if (message instanceof DisconnectResponse) {
-                RunState runState = gameState.getState(RunState.class);
-                runState.serverHasBeenNotified();
+            if (messageToTranslatorMap.containsKey(message.getClass())) {
+                Translator translator = messageToTranslatorMap.get(message.getClass());
+                translator.mergeMessage(gameState, message);
             }
         }
     }
 
     private void sendChangesToServer(AggregateGameState gameState) {
         for (GameState change : gameState.getStatesChangedBy(ChangeSource.CLIENT)) {
-            if (change instanceof ChatState) {
-                for (String message : ((ChatState) change).getPendingChatLogChanges(ChangeSource.CLIENT)) {
-                    Chat chat = new Chat();
-                    chat.message = message;
-                    networkSyncer.sendMessage(Chat.class, chat);
-                }
-            } else if (change instanceof RunState) {
-                RunState runState = (RunState)change;
-                networkSyncer.sendMessage(DisconnectRequest.class, new DisconnectRequest());
-                System.out.println("Sending disconnect request");
+            if (stateToTranslatorMap.containsKey(change.getClass())) {
+                Translator translator = stateToTranslatorMap.get(change.getClass());
+                List<Object> messages = translator.toMessages(change);
+                networkSyncer.sendMessages(messages.get(0).getClass(), messages);
             }
         }
     }

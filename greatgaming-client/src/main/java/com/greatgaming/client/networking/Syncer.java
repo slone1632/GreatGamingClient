@@ -1,6 +1,5 @@
 package com.greatgaming.client.networking;
 
-import com.greatgaming.client.engine.GameBridge;
 import com.greatgaming.comms.messages.DisconnectResponse;
 import com.greatgaming.comms.messages.HeartbeatAcknowledge;
 
@@ -23,6 +22,11 @@ public class Syncer implements Runnable{
 
     public <T> void sendMessage(Class<T> clazz, T messageObject) {
         this.messageSender.addMessage(clazz, messageObject);
+    }
+    public <T> void sendMessages(Class<T> clazz, List<Object> messageObjects) {
+        for (Object message : messageObjects) {
+            sendMessage(clazz, (T)message);
+        }
     }
     public List<Object> getIncomingMessages() {
         List<Object> messages = new ArrayList<>();
